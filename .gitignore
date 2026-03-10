@@ -1,0 +1,4 @@
+myenv/
+.ipynb_checkpoints
+Jupyterlab_start.bat
+data/
