@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import OneHotEncoder,OrdinalEncoder
-from typing import List
+from typing import List,Literal,Annotated
 from pandas  import DataFrame,concat
 import pandas as pd
 import numpy as np
@@ -13,7 +13,6 @@ class EnCoder(BaseEstimator,TransformerMixin):
         self.oe = OrdinalEncoder(categories=self.OrdinalCategories,dtype=int)
         self.ohe = OneHotEncoder(drop="if_binary",sparse_output=False,handle_unknown='ignore',dtype=int)
     def fit(self,X:DataFrame,y=None):
-        check_is_fitted(self, "is_fitted_")
         X = X.copy()
         if self.OrdinalCols:
             self.oe.fit(X[self.OrdinalCols])
@@ -22,6 +21,7 @@ class EnCoder(BaseEstimator,TransformerMixin):
         self.is_fitted_=True
         return self
     def transform(self,X:DataFrame):
+        check_is_fitted(self, "is_fitted_")
         X=X.copy().reset_index(drop=True)
         if self.OrdinalCols:
             X[self.OrdinalCols]=self.oe.transform(X[self.OrdinalCols])
@@ -79,14 +79,14 @@ class NumGroupMeanImputer(BaseEstimator, TransformerMixin):
 
         return X
 
-class DTIImputer(BaseEstimator, TransformerMixin):
+class DtirImputer(BaseEstimator, TransformerMixin):
 
     def __init__(self,
-                loan_amount_col='loan_amount',
-                rate_col='rate_of_interest',
-                term_col='term',
-                income_col='income',
-                target_col='dtir1'):
+                 loan_amount_col='loan_amount',
+                 rate_col='rate_of_interest',
+                 term_col='term',
+                 income_col='income',
+                 target_col='dtir1'):
 
         self.loan_amount_col = loan_amount_col
         self.rate_col = rate_col
@@ -106,12 +106,13 @@ class DTIImputer(BaseEstimator, TransformerMixin):
 
         emi = (P * r * (1 + r)**n) / ((1 + r)**n - 1)
 
+        emi = emi.replace([np.inf, -np.inf], np.nan)
+
         X[self.target_col] = X[self.target_col].fillna(
-            emi / X[self.income_col]
+            (emi / X[self.income_col].replace(0, np.nan))*100
         )
 
         return X
-
 class LogTransform(BaseEstimator,TransformerMixin):
     def __init__(self,cols:List[str]):
         self.cols = cols
@@ -119,5 +120,29 @@ class LogTransform(BaseEstimator,TransformerMixin):
         self.is_fitted_=True
         return self
     def transform(self,X: DataFrame):
+        check_is_fitted(self, "is_fitted_")
         X = X.copy()
         X[self.cols] = np.log1p(X[self.cols])
+        return X
+class HasFeaturesTransform(BaseEstimator,TransformerMixin):
+    def __init__(self,col:str,value=0,method:Literal["<",">","==","!="]=">"):
+        self.col = col
+        self.value = value
+        self.method = method
+    def fit(self,X: DataFrame,y=None):
+        self.is_fitted_ = True
+        return self
+    def transform(self,X: DataFrame):
+        check_is_fitted(self, "is_fitted_")
+        X = X.copy()
+        if self.method==">":
+            X[f"has_{self.col}"] = (X[self.col]>self.value).astype(int)
+        elif self.method=="<":
+            X[f"has_{self.col}"] = (X[self.col]<self.value).astype(int)
+        elif self.method=="==":
+            X[f"has_{self.col}"] = (X[self.col]==self.value).astype(int)
+        elif self.method=="!=":
+            X[f"has_{self.col}"] = (X[self.col]!=self.value).astype(int)
+        else:
+            raise ValueError("invalid method")
+        return X
