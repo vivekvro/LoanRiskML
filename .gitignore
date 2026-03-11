@@ -2,3 +2,7 @@ myenv/
 .ipynb_checkpoints
 Jupyterlab_start.bat
 data/
+test.ipynb
+*.joblib
+*.pkl
+__pycache__/
