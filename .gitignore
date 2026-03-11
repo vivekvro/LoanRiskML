@@ -6,3 +6,4 @@ test.ipynb
 *.joblib
 *.pkl
 __pycache__/
+.env

@@ -2,17 +2,15 @@ from fastapi import FastAPI,HTTPException
 from src.schemas.schemas import UserRecord
 from src.core.predictor import get_prediction
 
+import requests
+
 
 
 app = FastAPI()
 
 
-@app.post("/UserDetails")
+@app.post("/insertrecord")
 def get_userdetails(user:UserRecord):
-
-
-
-
 
 
 @app.post("/prediction")
