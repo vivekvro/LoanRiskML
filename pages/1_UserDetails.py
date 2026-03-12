@@ -1,5 +1,13 @@
 import streamlit as st
+import requests
+import os,dotenv
+dotenv.load_dotenv()
+from pandas import DataFrame
 
+MAIN_URL = os.getenv("MAIN_URL")
+
+
+insert_url = MAIN_URL+"/insertrecord"
 select = st.selectbox(
     "Select :",
     ("Search Records", "Insert Records"),
@@ -62,14 +70,58 @@ if select == "Insert Records":
         submit = st.form_submit_button("Submit Record")
 
     if submit:
-        st.success("Record submitted")
+        with st.spinner("inserting....."):
+            data={
+                    "id": id,
+                    "year": year,
+                    "gender": gender,
+                    "loan_limit": loan_limit,
+                    "approv_in_adv": approv_in_adv,
+                    "loan_type": loan_type,
+                    "loan_purpose": loan_purpose,
+                    "credit_worthiness": credit_worthiness,
+                    "open_credit": open_credit,
+                    "business_or_commercial": business_or_commercial,
+                    "neg_ammortization": neg_ammortization,
+                    "interest_only": interest_only,
+                    "lump_sum_payment": lump_sum_payment,
+                    "construction_type": construction_type,
+                    "occupancy_type": occupancy_type,
+                    "secured_by": secured_by,
+                    "total_units": total_units,
+                    "credit_type": credit_type,
+                    "co_applicant_credit_type": co_applicant_credit_type,
+                    "age": age,
+                    "submission_of_application": submission_of_application,
+                    "region": region,
+                    "security_type": security_type,
+                    "loan_amount": loan_amount,
+                    "rate_of_interest": rate_of_interest,
+                    "interest_rate_spread": interest_rate_spread,
+                    "upfront_charges": upfront_charges,
+                    "term": term,
+                    "property_value": property_value,
+                    "income": income,
+                    "credit_score": credit_score,
+                    "ltv": ltv,
+                    "dtir1": dtir1
+                    }
+            response = requests.post(url=insert_url,json=data)
+            st.write(response.json())
+
 
 # SEARCH PAGE
 elif select == "Search Records":
-
     st.header("Search Record")
-
+    select_type = st.selectbox("select",['User Record','Loan Risk by User'])
     user_id = st.number_input("Enter User ID", min_value=1)
 
     if st.button("Search"):
-        st.write("Fetching record...")
+        with st.spinner("fetching...."):
+            if select_type=='User Record':
+                url = f"{MAIN_URL}/getUserrecord/{user_id}"
+            elif select_type=="Loan Risk by User":
+                url = f"{MAIN_URL}/getLoanriskrecord/{user_id}"
+
+            response = requests.get(url=url)
+            st.dataframe(DataFrame([response.json()]))

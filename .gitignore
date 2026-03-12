@@ -3,6 +3,8 @@ myenv/
 Jupyterlab_start.bat
 data/
 test.ipynb
+test.py
+
 *.joblib
 *.pkl
 __pycache__/
